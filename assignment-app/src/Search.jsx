@@ -1,51 +1,64 @@
 import { useState } from "react";
 import SearchBar from "./SearchBar";
+import MetricsDisplay from "./MetricsDisplay";
+import SearchResultsTable from "./SearchResultsTable";
 
 export default function Search() {
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("No Records To Display");
+  const [error, setError] = useState(null);
 
   const handleSearch = async (filterType, keyword) => {
-    if (!filterType || !keyword) {
-      alert("Please select a filter and enter a keyword.");
-      return;
-    }
+    setLoading(true);
+    setError(null);
+    setMessage("Loading...");
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/data/search?filterType=${filterType}&keyword=${keyword}`
-      );
+      const url = `http://localhost:3000/api/data/search?filterType=${filterType}&keyword=${keyword}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch search results");
+      }
 
       const data = await response.json();
       setResults(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+
+      if (data.length === 0) {
+        setMessage("No Records To Display");
+      } else {
+        setMessage(`Displaying ${data.length} Records`);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError(err.message);
+      setResults([]);
+      setMessage("Error fetching data");
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="container mt-4">
-      <h1>Search Through Dataset</h1>
+      <h2>User Behavior Data</h2>
 
+      {/* Search Bar */}
       <SearchBar onSearch={handleSearch} />
 
-      <div className="mt-4">
-        <h3>Results</h3>
+      {/* Status Message */}
+      <p className="mt-3">{message}</p>
 
-        {results.length === 0 ? (
-          <p>No results yet.</p>
-        ) : (
-          <ul className="list-group">
-            {results.map((item, index) => (
-              <li key={index} className="list-group-item">
-                <strong>Model:</strong> {item["Device Model"]} <br />
-                <strong>Gender:</strong> {item["Gender"]} <br />
-                <strong>OS:</strong> {item["Operating System"]} <br />
-                <strong>Behavior Class:</strong> {item["User Behavior Class"]}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* Metrics */}
+      <MetricsDisplay results={results} />
+
+      {/* Results Table */}
+      <SearchResultsTable
+        results={results}
+        loading={loading}
+        error={error}
+      />
     </div>
   );
 }
