@@ -25,13 +25,12 @@ export default function Search() {
       const data = await response.json();
       setResults(data);
 
-      if (data.length === 0) {
-        setMessage("No Records To Display");
-      } else {
-        setMessage(`Displaying ${data.length} Records`);
-      }
+      setMessage(
+        data.length === 0
+          ? "No Records To Display"
+          : `Displaying ${data.length} Records`
+      );
     } catch (err) {
-      console.error("Error fetching data:", err);
       setError(err.message);
       setResults([]);
       setMessage("Error fetching data");
@@ -42,23 +41,21 @@ export default function Search() {
 
   return (
     <div className="container mt-4">
-      <h2>User Behavior Data</h2>
 
-      {/* Search Bar */}
-      <SearchBar onSearch={handleSearch} />
+      <h2 className="fw-bold mb-1">User Behavior Data</h2>
+      <p className="text-muted mb-4">Search Through Dataset</p>
 
-      {/* Status Message */}
-      <p className="mt-3">{message}</p>
+      <div className="card p-3 mb-4 shadow-sm">
+        <SearchBar onSearch={handleSearch} />
+      </div>
 
-      {/* Metrics */}
+      <p className="mt-2">{message}</p>
+
+      <h4 className="fw-bold mb-3">Metrics</h4>
       <MetricsDisplay results={results} />
 
-      {/* Results Table */}
-      <SearchResultsTable
-        results={results}
-        loading={loading}
-        error={error}
-      />
+      <h4 className="fw-bold mt-4 mb-3">Search Results</h4>
+      <SearchResultsTable results={results} loading={loading} error={error} />
     </div>
   );
 }

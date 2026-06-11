@@ -3,66 +3,67 @@ const _ = require("lodash");
 const router = express.Router();
 const json = require("./files/user-behavior-data.json");
 
-router.get("/data/search", (req, res, next) => {
-  /*
-    Valid Query String Parameters
-    - operatingSystem
-    - deviceModel
-    - gender
-    - behaviorClass
-  */
+// Return full dataset
+router.get("/data", (req, res) => {
+  res.send(json);
+});
 
+// Search route
+router.get("/data/search", (req, res) => {
   const filterType = req.query.filterType || null;
-  const keyword = req.query.keyword || null;
+  const keyword = req.query.keyword || "";
+
+  // Debug log so we can see what the backend receives
+  console.log("FILTER:", filterType, "KEYWORD:", keyword);
 
   let searchType;
   if (filterType) {
-    const lower_case = filterType.toLowerCase();
+    const lower = filterType.toLowerCase();
     searchType =
-      lower_case === "model"
+      lower === "model"
         ? "m"
-        : lower_case === "gender"
+        : lower === "gender"
         ? "g"
-        : lower_case === "operatingsystem"
+        : lower === "operatingsystem"
         ? "op"
-        : lower_case === "behaviorclass"
+        : lower === "behaviorclass"
         ? "bc"
         : "unfiltered";
   }
 
-  if (
-    searchType === "unfiltered" ||
-    (searchType !== "unfiltered" && !keyword)
-  ) {
+  // FIXED: keyword.trim() instead of !keyword
+  if (searchType === "unfiltered" || keyword.trim() === "") {
     return res.send(json);
-  } else {
-    const filteredData = _.filter(json, (record) => {
-      let include = false;
-      let lower_keyword = keyword.toLowerCase();
-      switch (searchType) {
-        case "m":
-          include =
-            record["Device Model"].toLowerCase().indexOf(lower_keyword) >= 0;
-          break;
-        case "g":
-          include = record["Gender"].toLowerCase() === lower_keyword;
-          break;
-        case "op":
-          include =
-            record["Operating System"].toLowerCase().indexOf(lower_keyword) >=
-            0;
-          break;
-        case "bc":
-          include = record["User Behavior Class"] === lower_keyword;
-          break;
-        default:
-          return false;
-      }
-
-      return include;
-    });
-    return res.send(filteredData);
   }
+
+  const lowerKeyword = keyword.toLowerCase().trim();
+
+  const filteredData = _.filter(json, (record) => {
+    switch (searchType) {
+      case "m":
+        return record["Device Model"]
+          .toLowerCase()
+          .includes(lowerKeyword);
+
+      case "g":
+        return record["Gender"].toLowerCase() === lowerKeyword;
+
+      case "op":
+        return record["Operating System"]
+          .toLowerCase()
+          .includes(lowerKeyword);
+
+      case "bc":
+        return record["User Behavior Class"]
+          .toString()
+          .toLowerCase() === lowerKeyword;
+
+      default:
+        return false;
+    }
+  });
+
+  return res.send(filteredData);
 });
 
 module.exports = router;

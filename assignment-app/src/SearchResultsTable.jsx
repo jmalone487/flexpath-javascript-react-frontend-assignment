@@ -1,24 +1,16 @@
 export default function SearchResultsTable({ results, loading, error }) {
-  if (loading) {
-    return <p>Loading Records...</p>;
-  }
-
-  if (error) {
-    return <p style={{ color: "red" }}>{error}</p>;
-  }
-
-  if (!results || results.length === 0) {
-    return <p>No Records To Display</p>;
-  }
+  if (loading) return <p>Loading Records...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!results || results.length === 0) return <p>No Records To Display</p>;
 
   const headers = Object.keys(results[0]);
 
   return (
-    <table className="table table-bordered mt-3">
+    <table className="table table-bordered table-striped table-hover">
       <thead>
         <tr>
-          {headers.map((header, index) => (
-            <th key={index} style={{ textAlign: "left" }}>
+          {headers.map((header, i) => (
+            <th key={i} style={{ textTransform: "capitalize" }}>
               {header}
             </th>
           ))}
@@ -26,12 +18,10 @@ export default function SearchResultsTable({ results, loading, error }) {
       </thead>
 
       <tbody>
-        {results.map((record, rowIndex) => (
-          <tr key={rowIndex}>
-            {headers.map((header, colIndex) => (
-              <td key={colIndex} style={{ textAlign: "left" }}>
-                {record[header]}
-              </td>
+        {results.map((row, i) => (
+          <tr key={i}>
+            {headers.map((header, j) => (
+              <td key={j}>{row[header]}</td>
             ))}
           </tr>
         ))}
